@@ -8,7 +8,7 @@ class CustomUser(models.Model):
     activated = models.CharField()
     langKey = models.CharField()
     phone = models.CharField()
-    defaultUserPerDepartment = models.ForeignKey('IUserPerDepartment')
+    default_user_per_department = models.ForeignKey('UserPerDepartment')
 
 
 class CustomFile(models.Model):
@@ -16,6 +16,7 @@ class CustomFile(models.Model):
 
 
 class Department(models.Model):
+    base_department = models.ForeignKey('Department', null=True)
     name = models.CharField()
     password = models.CharField()
     avatar = models.ForeignKey(CustomFile)
@@ -36,30 +37,46 @@ class Topic(models.Model):
 
 
 class TopicVote(models.Model):
+    # add limit on number of votes
     topic = models.ForeignKey(Topic)
     user_per_department = models.ForeignKey(UserPerDepartment)
     voter = models.ForeignKey(UserPerDepartment)
+
+
+class Comment(models.Model):
+    text = models.CharField()
+    writer = models.ForeignKey(UserPerDepartment)
+    supper_comment = models.ForeignKey('Comment', null=True)
+
+
+class CommentFiles(models.Model):
+    comment = models.ForeignKey(Comment)
+    file = models.ForeignKey(CustomFile)
+
+
+class Memorial(models.Model):
+    # can be changed to support several anonymous_comment and not_anonymous_comment
+    anonymous_comment = models.ForeignKey(Comment)
+    not_anonymous_comment = models.ForeignKey(Comment)
+    writer = models.ForeignKey(UserPerDepartment)
+    recipient = models.ForeignKey(UserPerDepartment)
+    department = models.ForeignKey(Department)
 
 
 class Memory(models.Model):
     title = models.CharField()
     is_private = models.BooleanField()
     writer = models.ForeignKey(UserPerDepartment)
-    # tageds = models.ForeignKey(UserPerDepartment)
     department = models.ForeignKey(Department)
+    base_comment = models.ForeignKey(Comment)
 
 
-class Comment(models.Model):
+class TagedUsers(models.Model):
+    Comment = models.ForeignKey(Comment)
+    user_per_department = models.ForeignKey(UserPerDepartment)
+
+
+class Reminder(models.Model):
+    user_per_department = models.ForeignKey(UserPerDepartment)
+    # can be changed to add words instead of text
     text = models.CharField()
-    # pictures several custom file
-    writer = models.ForeignKey(UserPerDepartment)
-    memory = models.ForeignKey(Memory)
-    base_comment = models.ForeignKey('Comment')
-
-
-class Memorial(models.Model):
-    anonymousComment = models.ForeignKey(Comment)
-    notAnonymousComment = models.ForeignKey(Comment)
-    writer = models.ForeignKey(UserPerDepartment)
-    recipient = models.ForeignKey(UserPerDepartment)
-    department = models.ForeignKey(Department)
