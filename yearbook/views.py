@@ -5,8 +5,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from drf_spectacular.utils import extend_schema
 
+from yearbook.permissions import IsOwner
 from yearbook.models import Department, UserPerDepartment
-from yearbook.serializers import DepartmentJoinSerializer, DepartmentSerializer
+from yearbook.serializers import (
+    DepartmentJoinSerializer,
+    DepartmentSerializer,
+    UserPerDepartmentSerializer,
+)
 
 # Create your views here.
 
@@ -14,13 +19,17 @@ from yearbook.serializers import DepartmentJoinSerializer, DepartmentSerializer
 class DepartmentViewSet(viewsets.ModelViewSet):
     serializer_class = DepartmentSerializer
     queryset = Department.objects.all()
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsOwner)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user.profile)
 
+    def list(self, request, *args, **kwargs):
+        query = self.get_queryset()
+        return query.filter(owner=request.user)
+
     @extend_schema(request=DepartmentJoinSerializer)
-    @action(detail=True, methods=["post"])
+    @action(detail=True, methods=["post"], permission_classes=(IsAuthenticated,))
     def join(self, request, pk=None):
         department = self.get_object()
         serializer = DepartmentJoinSerializer(data=request.data)
@@ -39,3 +48,13 @@ class DepartmentViewSet(viewsets.ModelViewSet):
             data=DepartmentSerializer(department).data,
             status=status.HTTP_200_OK,
         )
+
+
+class UserPerDepartmentViewsSet(viewsets.ModelViewSet):
+    queryset = UserPerDepartment.objects.none()
+    serializer_class = UserPerDepartmentSerializer
+    http_method_names = ["get", "put", "head"]
+    permission_classes = [IsAuthenticated, IsOwner]
+
+    def get_queryset(self):
+        return UserPerDepartment.objects(user=self.request.user)

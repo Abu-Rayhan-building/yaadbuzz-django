@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Department
+from .models import Department, UserPerDepartment
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
@@ -12,3 +12,10 @@ class DepartmentSerializer(serializers.ModelSerializer):
 
 class DepartmentJoinSerializer(serializers.Serializer):
     password = serializers.CharField(required=True, max_length=50)
+
+
+class UserPerDepartmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserPerDepartment
+        fields = ["id", "user", "department", "bio", "avatar", "nickname"]
+        read_only_fields = ["id", "user", "department"]
